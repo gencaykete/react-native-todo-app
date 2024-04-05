@@ -1,18 +1,62 @@
 import React, { useState } from "react";
 import { observer } from "mobx-react";
-import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import TodoStore from "../Stores/TodoStore";
 
 const TodoList = observer(() => {
   const [newTodo, setNewTodo] = useState("");
+  const [editIndex, setEditIndex] = useState(-1);
+  const [editText, setEditText] = useState("");
 
   const handleAddTodo = () => {
-    TodoStore.addTodo(newTodo);
-    setNewTodo("");
+    if (newTodo.length > 0){
+      TodoStore.addTodo(newTodo);
+      setNewTodo("");
+    }else {
+      Alert.alert(
+        "Hata",
+        "Lütfen bir todo giriniz.",
+        [
+          {
+            text: "Tamam",
+            style: "cancel"
+          }
+        ],
+        { cancelable: true }
+      );
+    }
   };
 
   const handleRemoveTodo = (index) => {
-    TodoStore.removeTodo(index);
+    Alert.alert(
+      "Emin misiniz?",
+      "Silmek istediğinize emin misiniz?",
+      [
+        {
+          text: "İptal",
+          style: "cancel"
+        },
+        {
+          text: "Sil",
+          onPress: () => {
+            TodoStore.removeTodo(index);
+          },
+          style: "destructive"
+        }
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditTodo = (index, text) => {
+    setEditIndex(index);
+    setEditText(text);
+  };
+
+  const handleSaveEdit = (index) => {
+    TodoStore.editTodo(index, editText);
+    setEditIndex(-1);
+    setEditText("");
   };
 
   return (
@@ -31,11 +75,31 @@ const TodoList = observer(() => {
       <FlatList
         data={TodoStore.todos}
         renderItem={({ item, index }) => (
-          <View style={styles.listItem}>
-            <Text>{item}</Text>
-            <TouchableOpacity onPress={() => handleRemoveTodo(index)}>
-              <Text style={{ color: "red" }}>Sil</Text>
-            </TouchableOpacity>
+          <View style={styles.listGroup}>
+            {editIndex === index ? (
+              <View style={styles.listItem}>
+                <TextInput
+                  value={editText}
+                  onChangeText={setEditText}
+                  style={styles.input}
+                />
+                <TouchableOpacity onPress={() => handleSaveEdit(index)}>
+                  <Text style={{ color: "green" }}>Kaydet</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.listItem}>
+                <Text>{item}</Text>
+                <View style={styles.actionGroup}>
+                  <TouchableOpacity onPress={() => handleEditTodo(index, item)}>
+                    <Text style={{ color: "blue" }}>Düzenle</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleRemoveTodo(index)}>
+                    <Text style={{ color: "red" }}>Sil</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
@@ -73,6 +137,7 @@ let styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     width: "80%",
+    marginRight: 10,
   },
   listItem: {
     flexDirection: "row",
@@ -82,6 +147,10 @@ let styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ddd",
     paddingVertical: 5,
+  },
+  actionGroup: {
+    flexDirection: "row",
+    gap: 15,
   },
 });
 

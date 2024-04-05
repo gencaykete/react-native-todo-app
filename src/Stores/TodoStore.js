@@ -14,6 +14,10 @@ class TodoStore {
   removeTodo(index) {
     this.todos.splice(index, 1);
   }
+
+  editTodo(index, newText) {
+    this.todos[index] = newText;
+  }
 }
 
 const store = new TodoStore();
