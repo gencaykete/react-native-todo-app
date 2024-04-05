@@ -1,11 +1,15 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeAutoObservable } from "mobx";
 
 class TodoStore {
   todos = [
     "Todo 1",
     "Todo 2",
-    "Todo 3"
+    "Todo 3",
   ];
+
+  constructor() {
+    makeAutoObservable(this);
+  }
 
   addTodo(todo) {
     this.todos.push(todo);
